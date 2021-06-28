@@ -1,1 +1,1 @@
-# Resultant Green Mask & Percentage Green Cover
+# Resultant Green Mask
