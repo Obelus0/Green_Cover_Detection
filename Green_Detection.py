@@ -7,10 +7,10 @@ import numpy as np
 import cv2
 
 #Read image
-img = cv2.imread("2009M.jpg")
+img = cv2.imread("2009_Mumbai.jpg")
 
 # boundary conditions for green color H,S,V (Can be tweaked if required)
-lowerBound = np.array([36, 70, 40])
+lowerBound = np.array([36, 60, 40])
 upperBound = np.array([102, 255, 255])
 
 # image processing for easy segmentation
