@@ -136,7 +136,7 @@ def Green_Cover_Detection(img):
 
     # boundary conditions of HSV image for segmented image
     lowerBound = np.array([20, 25, 25])
-    upperBound = np.array([74, 255, 255])
+    upperBound = np.array([80, 255, 255])
 
     # image processing for easy segmentation
     N = cv2.resize(img, (705, 520))
