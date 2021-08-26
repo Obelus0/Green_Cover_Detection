@@ -111,12 +111,10 @@ def NDVI_Green_Cover_Detection(img):
 
     # percentage of green cover
     percent = mask.mean() * 100 / 255
-
     mask = cv2.resize(mask, (img.shape[1], img.shape[0]))
 
     # Since we drew the contour on img_resize and we want it back in the orginal shape
     img_conts = cv2.resize(img_resize, (img.shape[1], img.shape[0]))
-
     img_conts = cv2.cvtColor(img_conts, cv2.COLOR_BGR2RGB)
 
     return mask, img_conts, percent
@@ -179,7 +177,6 @@ def Green_Cover_Detection(img):
     # Take only region with out green cover
     img2_fg = cv2.bitwise_and(N, N, mask=mask)
     diff = N - img2_fg
-
     percent = mask.mean() * 100 / 255
 
     mask = cv2.resize(mask, (img.shape[1], img.shape[0]))
@@ -219,9 +216,7 @@ def Map():
 
     if selection == 'Address':
         address = st.text_input("Enter Location Region, Street Name or Postal Code")
-
         geolocator = Nominatim(user_agent="Green_Cover_Detection")
-
         location = geolocator.geocode(address)
 
         if location is None:
@@ -229,7 +224,6 @@ def Map():
             return
 
         lat = location.latitude
-
         long = location.longitude
 
     elif selection == 'Lat-Long':
@@ -314,19 +308,23 @@ def Map():
                 folium_static(my_map_final, width=650)
 
             if st.button('Compare Green Cover'):
+                """
+                Method in order to convert the folium map to an image using selenium
+                
+                """
                 # Save the map as an HTML file
                 fn = 'testmap.html'
                 tmpurl = 'file://{path}/{mapfile}'.format(path=os.getcwd(), mapfile=fn)
                 my_map_initial.save(fn)
 
-                # # Open a browser window...
+                # Open a browser window...
                 browser = webdriver.Firefox()
-                # # ..that displays the map...
+                # ..that displays the map...
                 browser.get(tmpurl)
                 time.sleep(0.1)
-                # # Grab the screenshot
+                # Grab the screenshot
                 browser.save_screenshot('map_initial.png')
-                # # Close the browser
+                # Close the browser
                 browser.quit()
 
                 # Cropping the region of the required image
@@ -334,19 +332,18 @@ def Map():
                 crop_img_initial = img_initial[180:700, 295:1000]
                 final_img_initial = cv2.cvtColor(crop_img_initial, cv2.COLOR_BGR2RGB)
 
-                green_img_initial, contour_img_initial, percentage_initial = NDVI_Green_Cover_Detection(
-                    crop_img_initial)
+                green_img_initial, contour_img_initial, percentage_initial = NDVI_Green_Cover_Detection(crop_img_initial)
 
                 st.text("Initial Year")
                 st.image(contour_img_initial, width=650)
 
                 st.text("Percentage of Green Cover - Initial Year")
                 st.write(percentage_initial)
-
+                
+                # Performing the same for the other map
                 fn1 = 'testmap1.html'
                 tmpurl1 = 'file://{path}/{mapfile}'.format(path=os.getcwd(), mapfile=fn1)
                 my_map_final.save(fn1)
-
                 browser = webdriver.Firefox()
                 browser.get(tmpurl1)
                 time.sleep(0.5)
@@ -372,7 +369,7 @@ def Map():
 
         date = st.date_input('Enter Date', max_value=datetime.date(2021, 1, 1), min_value=datetime.date(1999, 1, 1),
                              value=datetime.date(2020, 1, 1))
-
+        
         date_time = date.strftime("%Y-%d-%m")
         date_time_end = date + relativedelta(months=12)
         date_time_end = date_time_end.strftime("%Y-%d-%m")
@@ -388,10 +385,9 @@ def Map():
         LandCover_img = collection2.select('discrete_classification')
 
         if lat and long is not None:
+            
             my_map = folium.Map(location=[lat, long], zoom_start=zoom)
-
             basemaps['Google Satellite'].add_to(my_map)
-
             my_map.add_ee_layer(LandCover_img, {}, 'LandCover')
 
             # Add the land cover to the map object.
@@ -430,6 +426,108 @@ def Map():
 
                 st.text("Percentage of Green Cover")
                 st.write(percentage)
+
+def Plant_Trees_Near_Me():
+    
+        st.title('Region to plant trees')
+
+        options = ["Lat-Long", "Address"]
+        selection = st.selectbox("Select Option", options)
+
+        if selection == 'Address':
+            address = st.text_input("Enter Location Region, Street Name or Postal Code")
+
+            geolocator = Nominatim(user_agent="Green_Cover_Detection")
+
+            location = geolocator.geocode(address)
+
+            if location is None:
+                st.text('The region cannot be identified, please enter valid Region, Street Name or Postal Code')
+                return
+
+            lat = location.latitude
+
+            long = location.longitude
+
+        elif selection == 'Lat-Long':
+            lat = st.number_input('Enter latitude', min_value=-90.00, max_value=90.00, value=0.00, step=0.0001,
+                                  format="%.5f")
+            long = st.number_input('Enter longitude', min_value=-180.00, max_value=180.00, value=0.00, step=0.0001,
+                                   format="%.5f")
+
+        Radius = st.number_input('Km radius around given region to search for suitable location - (Warning large '
+                                 'radius will take longer time to process)', min_value=1,
+                                 max_value=5, value=1)
+
+        if st.button('Find Regions'):
+            folium.Map.add_ee_layer = add_ee_layer
+            
+            #To maintain the processing time for the area covered we change the zoom
+            if Radius <= 2:
+                zoom = 18
+                increment = 0.007
+            else:
+                zoom = 17
+                increment = 0.015
+                
+            # Here 0.01 of a degree is considered approximately a kilometer of distance
+            lat_boundary = lat + 0.01 * Radius
+            long_boundary = long - 0.01 * Radius
+            Region_Counter = 0
+            Potential_Region_Counter = 0
+            if lat and long is not None:
+                lat = lat - 0.01 * Radius
+
+                while lat < lat_boundary:
+                    long = long + 0.01 * Radius
+                    while long > long_boundary:
+                        
+                        my_map = folium.Map(location=[lat, long], zoom_start=zoom)
+                        basemaps['Google Satellite'].add_to(my_map)
+                        
+                        fn = 'testmap.html'
+                        tmpurl = 'file://{path}/{mapfile}'.format(path=os.getcwd(), mapfile=fn)
+                        my_map.save(fn)
+                        browser = webdriver.Firefox()
+                        browser.get(tmpurl)
+                        time.sleep(0.4)
+                        browser.save_screenshot('map' + str(k) + '.png')
+                        browser.quit()
+                        
+                        img = cv2.imread('map' + str(k) + '.png')
+                        crop_img = img[180:700, 295:1000]
+                        mask, diff, segmented_image, percent = Green_Cover_Detection(crop_img)
+
+                        # Threshold can be changed based on the green cover allowed in a region
+                        if percent < 20:
+                            m = m + 1
+                            st.write('Potential Region ' + str(m))
+                            st.image(crop_img)
+                           
+                            if percent != 0.0:
+                                st.write(
+                                    str(percent) + ' percent green cover for image at latitude & longitude ' + str(
+                                        lat) + ',' + str(
+                                        long))
+                                
+                            # When green cover is minimal then K-means results in a mask of 0.0 even if slight vegetation is present
+                            else:
+                                st.write('The region at '+ str(
+                                        lat) + ',' + str(
+                                        long) + ' has very minimal green cover')
+
+                        Region_Counter = Region_Counter + 1
+                        long = long - increment
+                        # To stimulate loading
+                        st.text('>' * Region_Counter)
+                    lat = lat + increment
+
+                if Potential_Region_Counter == 0:
+                    st.write('Congratulations you live in region of a lot of greenary maybe you can go to the regions '
+                             'which we have identified that need trees')
+                else:
+                    st.text('The potential regions have been highlighted above')
+
 
 
 def main():
@@ -476,98 +574,7 @@ def main():
             Map()
 
     elif choice == 'Plant Trees Near Me':
-
-        st.title('Region to plant trees')
-
-        options = ["Lat-Long", "Address"]
-        selection = st.selectbox("Select Option", options)
-
-        if selection == 'Address':
-            address = st.text_input("Enter Location Region, Street Name or Postal Code")
-
-            geolocator = Nominatim(user_agent="Green_Cover_Detection")
-
-            location = geolocator.geocode(address)
-
-            if location is None:
-                st.text('The region cannot be identified, please enter valid Region, Street Name or Postal Code')
-                return
-
-            lat = location.latitude
-
-            long = location.longitude
-
-        elif selection == 'Lat-Long':
-            lat = st.number_input('Enter latitude', min_value=-90.00, max_value=90.00, value=0.00, step=0.0001,
-                                  format="%.5f")
-            long = st.number_input('Enter longitude', min_value=-180.00, max_value=180.00, value=0.00, step=0.0001,
-                                   format="%.5f")
-
-        Radius = st.number_input('Km radius around given region to search for suitable location - (Warning large '
-                                 'radius will take longer time to process)', min_value=1,
-                                 max_value=5, value=1)
-
-        if st.button('Find Regions'):
-            folium.Map.add_ee_layer = add_ee_layer
-
-            if Radius <= 2:
-                zoom = 18
-                increment = 0.007
-            else:
-                zoom = 17
-                increment = 0.015
-
-            n = lat + 0.01 * Radius
-            l = long - 0.01 * Radius
-            k = 0
-            m = 0
-            if lat and long is not None:
-                lat = lat - 0.01 * Radius
-
-                while lat < n:
-                    long = long + 0.01 * Radius
-                    while long > l:
-                        my_map = folium.Map(location=[lat, long], zoom_start=zoom)
-                        basemaps['Google Satellite'].add_to(my_map)
-
-                        fn = 'testmap.html'
-                        tmpurl = 'file://{path}/{mapfile}'.format(path=os.getcwd(), mapfile=fn)
-                        my_map.save(fn)
-                        browser = webdriver.Firefox()
-                        browser.get(tmpurl)
-                        time.sleep(0.4)
-                        browser.save_screenshot('map' + str(k) + '.png')
-                        browser.quit()
-                        img = cv2.imread('map' + str(k) + '.png')
-                        crop_img = img[180:700, 295:1000]
-
-                        mask, diff, segmented_image, percent = Green_Cover_Detection(crop_img)
-
-                        if percent < 20:
-                            m = m + 1
-                            st.write('Potential Region ' + str(m))
-                            st.image(crop_img)
-
-                            if percent != 0.0:
-                                st.write(
-                                    str(percent) + ' percent green cover for image at latitude & longitude ' + str(
-                                        lat) + ',' + str(
-                                        long))
-                            else:
-                                st.write('The region at '+ str(
-                                        lat) + ',' + str(
-                                        long) + ' has very minimal green cover')
-
-                        k = k + 1
-                        long = long - increment
-                        st.text('>' * k)
-                    lat = lat + increment
-
-                if m == 0:
-                    st.write('Congratulations you live in region of a lot of greenary maybe you can go to the regions '
-                             'which we have identified that need trees')
-                else:
-                    st.text('The potential regions have been highlighted above')
+        Plant_Trees_Near_Me()
 
     elif choice == 'Data Visualisation':
 
