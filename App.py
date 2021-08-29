@@ -25,6 +25,9 @@ import plotly.express as px
 import datetime
 from dateutil.relativedelta import relativedelta
 
+# Comment this out after Authenticating the earth engine 
+ee.Authenticate()
+
 # Initialising the earth engine
 ee.Initialize()
 
