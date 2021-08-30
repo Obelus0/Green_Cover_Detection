@@ -494,10 +494,10 @@ def Plant_Trees_Near_Me():
                         browser = webdriver.Firefox()
                         browser.get(tmpurl)
                         time.sleep(0.4)
-                        browser.save_screenshot('map' + str(k) + '.png')
+                        browser.save_screenshot('map' + str(Region_Counter) + '.png')
                         browser.quit()
                         
-                        img = cv2.imread('map' + str(k) + '.png')
+                        img = cv2.imread('map' + str(Region_Counter) + '.png')
                         crop_img = img[180:700, 295:1000]
                         mask, diff, segmented_image, percent = Green_Cover_Detection(crop_img)
 
