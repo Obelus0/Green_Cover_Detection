@@ -504,7 +504,7 @@ def Plant_Trees_Near_Me():
                         # Threshold can be changed based on the green cover allowed in a region
                         if percent < 20:
                             Potential_Region_Counter = Potential_Region_Counter + 1
-                            st.write('Potential Region ' + str(m))
+                            st.write('Potential Region ' + str(Potential_Region_Counter))
                             st.image(crop_img)
                            
                             if percent != 0.0:
