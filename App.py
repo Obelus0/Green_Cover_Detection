@@ -502,7 +502,7 @@ def Plant_Trees_Near_Me():
                         mask, diff, segmented_image, percent = Green_Cover_Detection(crop_img)
 
                         # Threshold can be changed based on the green cover allowed in a region
-                        if percent < 20:
+                        if percent < 40:
                             Potential_Region_Counter = Potential_Region_Counter + 1
                             st.write('Potential Region ' + str(Potential_Region_Counter))
                             st.image(crop_img)
