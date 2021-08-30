@@ -304,7 +304,7 @@ def Map():
             my_map_final.add_child(folium.LayerControl())
 
             st.text("Left - Initial Year, Right - Final Year")
-            col1, mid, col2 = st.beta_columns([1, 20, 20])
+            col1, mid, col2 = st.columns([1, 20, 20])
             with col1:
                 folium_static(my_map_initial, width=650)
             with col2:
@@ -583,7 +583,7 @@ def main():
 
         st.title('Comparison of the environment over 10 years')
 
-        col1, col2 = st.beta_columns(2)
+        col1, col2 = st.columns(2)
 
         selection = col1.radio('',('Groundwater','Rainfall'))
 
