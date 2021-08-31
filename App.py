@@ -137,7 +137,7 @@ def Green_Cover_Detection(img):
 
     # boundary conditions of HSV image for segmented image
     lowerBound = np.array([18, 25, 25])
-    upperBound = np.array([95, 255, 255])
+    upperBound = np.array([94, 255, 255])
 
     # image processing for easy segmentation
     N = cv2.resize(img, (705, 520))
@@ -152,7 +152,7 @@ def Green_Cover_Detection(img):
 
     # define criteria, number of clusters(K) and apply kmeans()
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 0.2)
-    k = 4
+    k = 5
     _, labels, (centers) = cv2.kmeans(pixel_values, k, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
 
     # Now convert back into uint8, and make original image
